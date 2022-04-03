@@ -1,14 +1,15 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class Student extends CI_Controller
 {
 
-    public function index() {
+    public function index()
+    {
 
         $this->load->library('pagination');
-        $config['per_page'] = 10;
+        $config['per_page'] = 20;
 
         $page = $this->input->get('page', true);
         $search_data = $this->input->get('search_data', true);
@@ -21,13 +22,14 @@ class Student extends CI_Controller
             $this->db->or_like('gender', $search_data);
             $this->db->or_like('country', $search_data);
         }
+
         $tempdb = clone $this->db;
         $total_row = $tempdb->from('students')->count_all_results();
         $this->db->limit($config['per_page'], $page);
         $this->db->order_by("student_id", "desc");
         $result['student_list'] = $this->db->get('students')->result_array();
 
-        $config['base_url'] = "http://localhost/ci_crud/student?search_data=$search_data";
+        $config['base_url'] = base_url("student?search_data=$search_data");
         $config['total_rows'] = $total_row;
         $config['use_page_numbers'] = TRUE;
         $config['page_query_string'] = TRUE;
@@ -63,22 +65,63 @@ class Student extends CI_Controller
         $this->load->view('master', $data);
     }
 
-    public function create_student_info() {
+    public function create_student_info()
+    {
 
-
-        if (isset($_POST['student_name'])) {
-            $post_data = $_POST;
+        if (0 && isset($_POST['student_name'])) {
+            $post_data = [
+                'student_name' => $this->input->post('student_name'),
+                'email_address' => $this->input->post('email_address'),
+                'contact' => $this->input->post('contact'),
+                'gender' => $this->input->post('gender'),
+                'phone_no' => $this->input->post('phone_no'),
+                'country' => $this->input->post('country'),
+            ];
+            print_r($post_data);
+            // die;
             $result = $this->db->insert('students', $post_data);
             if ($result) {
                 $this->session->set_flashdata('message', 'Succefully Created Student Info.');
             } else {
                 $this->session->set_flashdata('message', "An error occurred while inserting data.");
             }
-            redirect('student');
+            redirect('student/index');
+        }
+
+        $this->load->helper(array('form', 'url'));
+
+        $this->load->library('form_validation');
+
+        // Define Validation rules
+        $this->form_validation->set_rules('student_name', 'Name', 'required');
+        $this->form_validation->set_rules('email_address', 'Email', 'required');
+        // $this->form_validation->set_rules('passconf', 'Password Confirmation', 'required');
+        // $this->form_validation->set_rules('email', 'Email', 'required');
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->index();
+        } else {
+            $post_data = [
+                'student_name' => $this->input->post('student_name'),
+                'email_address' => $this->input->post('email_address'),
+                'contact' => $this->input->post('contact'),
+                'gender' => $this->input->post('gender'),
+                'phone_no' => $this->input->post('phone_no'),
+                'country' => $this->input->post('country'),
+            ];
+
+            $result = $this->db->insert('students', $post_data);
+            if ($result) {
+                $this->session->set_flashdata('message', 'Succefully Created Student Info.');
+            } else {
+                $this->session->set_flashdata('message', "An error occurred while inserting data.");
+            }
+            redirect('student/index');
         }
     }
 
-    public function view_student_info($student_id) {
+    public function view_student_info($student_id)
+    {
         if ($student_id != '') {
             $this->db->where('student_id', $student_id);
             $row['student_info'] = $this->db->get('students')->row_array();
@@ -87,7 +130,8 @@ class Student extends CI_Controller
         $this->load->view('master', $data);
     }
 
-    public function update_student_info($student_id) {
+    public function update_student_info($student_id)
+    {
 
 
         if (isset($_POST['student_id'])) {
@@ -115,7 +159,8 @@ class Student extends CI_Controller
         $this->load->view('master', $data);
     }
 
-    public function delete_student_info($student_id) {
+    public function delete_student_info($student_id)
+    {
 
         if ($student_id != '') {
             $this->db->where('student_id', $student_id);
@@ -128,5 +173,4 @@ class Student extends CI_Controller
             redirect('student');
         }
     }
-
 }
